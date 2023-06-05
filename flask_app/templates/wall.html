@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Users</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-stone-900">
+    <div id="wrapper" >
+        <!-- Navbar -->
+        <nav class="sticky top-0 z-10 w-full bg-stone-700 py-2 px-40 text-stone-200 shadow-lg">
+            <div class="px-6 flex justify-between items-center">
+                <!-- Navigation links -->
+                <a href="/"><img src="{{ url_for('static', filename='images/ninja_logo.png') }}" alt="site logo" class=" w-12 h-12 hover:animate-pulse"></a>
+                <h2 class=" text-center text-2xl text-semibold">Hello <span class="italic text-yellow-200">{{session['user_fullname']}}</span></h2>
+                <ul class=" flex text-lg font-semibold">
+                    <li>
+                        <a class="block transition duration-250 ease-in-out hover:text-yellow-400 py-2 px-4" href="/">Home</a>
+                    </li>
+                    <li>
+                        <a class="block transition duration-250 ease-in-out hover:text-yellow-400 py-2 px-4" href="/user/wall">Post</a>
+                    </li>
+                    <li>
+                        <a class="block transition duration-250 ease-in-out hover:text-yellow-400 py-2 px-4" href="/user/logout">Log Out</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <!-- Main Content -->
+        <div class="w-2/3 mx-auto mt-12">
+            <div class="w-3/4 mx-auto  bg-stone-800 rounded-lg shadow  text-stone-100 px-8 py-6">
+                
+                <p >What's on your mind today? Create a new post and let the whole world know!</p>
+                <form action="/post/new_post" method="post">
+                    {% with messages = get_flashed_messages() %} <!-- declare a variable called messages -->
+                        {% if messages %}  <!-- check if there are any messages -->
+                            {% for message in messages %}            <!-- loop through the messages -->
+                                <p class="italic text-sm text-red-400">{{message}}</p>                   <!-- display each message in a paragraph tag -->
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    <textarea name="content" id="" rows="10" class="p-2 w-full outline-none bg-stone-500 mt-4 text-stone-100"></textarea>
+                    <button type="submit"class="rounded border-2 border-stone-50 px-10 pb-[10px] pt-[12px] mt-2 text-sm font-medium uppercase text-stone-50 transition duration-150 ease-in-out hover:border-stone-100 hover:bg-green-300 hover:bg-opacity-20 hover:text-stone-100 active:border-stone-200 active:text-stone-200">Publish</button>
+                </form>
+            </div>
+            <div class="border-b-2 border-stone-50 rounded-lg my-12"></div>
+            <!-- Community Posts Content -->
+            <div class="w-3/4 mx-auto">
+                <h2 class=" text-left text-2xl text-stone-100 mb-2">All Community Posts</h2>
+                {% for post in all_posts %}
+                <div class=" bg-stone-800 rounded-lg shadow  text-stone-100 px-8 py-6 mb-2">
+                    <p class="text-stone-300 text-lg text-semibold mb-4">{{post.creator.first_name}} {{post.creator.last_name}} {{ post.created_at.strftime('%B %d, %Y') }}</p>
+                    <!-- Post content -->
+                    <div class="px-8 flex items-center gap-4">
+                        <p class="text-stone-100 w-4/5">{{post.content}}</p>
+                        {% if session.user_id == post.user_id %}
+                            <a href="/post/delete/{{post.id}}" id="deleteButton" class="rounded border-2 border-stone-50 px-4 py-1 text-sm font-medium uppercase text-stone-50 transition duration-150 ease-in-out hover:border-stone-100 hover:bg-red-400 hover:bg-opacity-30 hover:text-stone-100 active:border-stone-200 active:text-stone-200 ">Delete</a>
+                        {% endif %}
+                    </div>
+                    <div class="border-b-2 border-stone-50 rounded-lg mt-4 mb-8"></div>
+                    <!-- Add Comment -->
+                    <div class="bg-stone-900 px-8 w-4/5 mx-auto">
+                        <form action="/comment/new_comment" method="post" class="flex items-center mt-6 py-4 w-full outline-none rounded-lg text-stone-100">
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                            <input type="hidden" name="user_id" value="{{ session.user_id }}">
+                            <input type="text" name="content" class="w-full mr-2 bg-stone-800 px-1">
+                            <button type="submit"class="rounded border-2 border-stone-50 px-2 py-1 text-sm font-medium uppercase text-stone-50 transition duration-150 ease-in-out hover:border-stone-100 hover:bg-green-300 hover:bg-opacity-20 hover:text-stone-100 active:border-stone-200 active:text-stone-200">Comment</button>
+                        </form>
+                        <!-- Show Comments on post -->
+                        {% for comment in post.comments%}
+                        <div class=" border-t-2 border-stone-700 mt-2 py-2">
+                            <p class="text-stone-300 text-lg text-semibold">{{comment.creator.first_name}} {{comment.creator.last_name}} {{ comment.created_at.strftime('%B %d, %Y') }}</p>
+                            <p class="text-stone-100 w-4/5">{{comment.content}}</p>   
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<!-- Format for adding images -->
+<!-- <img src="{{ url_for('static', filename='images/img.png') }}"> -->
